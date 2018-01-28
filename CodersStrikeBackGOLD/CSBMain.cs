@@ -7,7 +7,53 @@ using System.Collections.Generic;
 
 namespace CodersStrikeBackGOLD
 {
-    class CSBProgram
+    static class CSBCompute
+    {
+
+    }
+
+    class CSBPod
+    {
+        private int p_myprevposX;
+        private int p_myprevposY;
+        private int p_myposX;
+        private int p_myposY;
+        private int p_myspeedX;
+        private int p_myspeedY;
+        private int p_myangle;
+        private int p_mynextCPID;
+
+        public CSBPod (int myposX, int myposY, int myspeedX, int myspeedY, int myangle, int mynextCPID)
+        {
+            p_myprevposX = myposX;
+            p_myprevposY = myposY;
+            p_myposX = myposX;
+            p_myposY = myposY;
+            p_myspeedX = myspeedX;
+            p_myspeedY = myspeedY;
+            p_myangle = myangle;
+            p_mynextCPID = mynextCPID;
+        }
+
+        public void Update(int myposX, int myposY, int myspeedX, int myspeedY, int myangle, int mynextCPID)
+        {
+            p_myprevposX = p_myposX;
+            p_myprevposY = p_myposY;
+            p_myposX = myposX;
+            p_myposY = myposY;
+            p_myspeedX = myspeedX;
+            p_myspeedY = myspeedY;
+            p_myangle = myangle;
+            p_mynextCPID = mynextCPID;
+        }
+    }
+
+    class CSBTrack
+    {
+
+    }
+
+    static class CSBProgram
     {
         static void Main(string[] args)
         {
@@ -56,13 +102,5 @@ namespace CodersStrikeBackGOLD
                 Console.WriteLine("8000 4500 100");
             }
         }
-    }
-    class CSBPod
-    {
-
-    }
-    class CSBTrack
-    {
-
     }
 }
