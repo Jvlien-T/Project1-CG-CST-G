@@ -57,6 +57,10 @@ namespace CodersStrikeBackGOLD
             LapsNumber = in1;
             CPNumber = in2;
         }
+        public void AddCheckPoint (int X, int Y)
+        {
+            ;
+        }
     }
 
     static class CSBProgram
@@ -72,13 +76,12 @@ namespace CodersStrikeBackGOLD
             int laps = int.Parse(Console.ReadLine());
             int checkpointCount = int.Parse(Console.ReadLine());
             CSBTrack FullTrack = new CSBTrack(laps, checkpointCount);
-
             for (int i = 0; i < FullTrack.LapsNumber; i++)
             {
                 inputs = Console.ReadLine().Split(' ');
                 int checkpointX = int.Parse(inputs[0]);
                 int checkpointY = int.Parse(inputs[1]);
-
+                FullTrack.AddCheckPoint(checkpointX, checkpointY);
             }
 
             // game loop
