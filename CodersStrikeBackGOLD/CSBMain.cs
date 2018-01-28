@@ -57,4 +57,12 @@ namespace CodersStrikeBackGOLD
             }
         }
     }
+    class CSBPod
+    {
+
+    }
+    class CSBTrack
+    {
+
+    }
 }
