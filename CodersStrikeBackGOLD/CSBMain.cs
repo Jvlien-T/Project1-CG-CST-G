@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace CodersStrikeBackGOLD
 {
-    static class Player
+    class CSBProgram
     {
         static void Main(string[] args)
         {
