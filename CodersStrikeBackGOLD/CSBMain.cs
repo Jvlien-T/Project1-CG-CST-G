@@ -125,10 +125,11 @@ namespace CodersStrikeBackGOLD
         }
     }
 
-    static class CSBProgram
+    static class Player
     {
         static void Main(string[] args)
         {
+            string rawinputs;
             string[] inputs;
             CSBPod PodMyG = new CSBPod();
             CSBPod PodMyH = new CSBPod();
@@ -139,9 +140,10 @@ namespace CodersStrikeBackGOLD
             int laps = int.Parse(Console.ReadLine());
             int checkpointCount = int.Parse(Console.ReadLine());
             CSBTrack Track = new CSBTrack(laps, checkpointCount);
-            for (int i = 0; i < Track.LapsNumber; i++)
+            for (int i = 0; i < Track.CPNumber; i++)
             {
-                inputs = Console.ReadLine().Split(' ');
+                rawinputs = Console.ReadLine();
+                inputs = rawinputs.Split(' ');
                 int checkpointX = int.Parse(inputs[0]);
                 int checkpointY = int.Parse(inputs[1]);
                 Track.AddCheckPoint(i, checkpointX, checkpointY);
@@ -152,7 +154,8 @@ namespace CodersStrikeBackGOLD
                 // read Pods
                 for (int i = 0; i < 4; i++)
                 {
-                    inputs = Console.ReadLine().Split(' ');
+                    rawinputs = Console.ReadLine();
+                    inputs = rawinputs.Split(' ');
                     int x = int.Parse(inputs[0]); // x Coordinates of pod
                     int y = int.Parse(inputs[1]); // y Coordinates of pod
                     int vx = int.Parse(inputs[2]); // x speed of pod
