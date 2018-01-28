@@ -9,7 +9,7 @@ namespace CodersStrikeBackGOLD
 {
     enum SectionLengthType { Close, Average, Far };
     enum CurveStrengthType { Open, Medium, Hairpin };
-    struct Coordinates
+    class Coordinates
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -56,9 +56,9 @@ namespace CodersStrikeBackGOLD
 
     class CSBPod
     {
-        private Coordinates p_myprevpos;
-        private Coordinates p_mypos;
-        private Coordinates p_myspeed;
+        private Coordinates p_myprevpos = new Coordinates();
+        private Coordinates p_mypos = new Coordinates();
+        private Coordinates p_myspeed = new Coordinates();
         private int p_myangle;
         private int p_mynextCPID;
 
@@ -84,29 +84,44 @@ namespace CodersStrikeBackGOLD
             p_myangle = myangle;
             p_mynextCPID = mynextCPID;
         }
+        public void Update(CSBTrack Track)
+        {
+            ;
+        }
+
+        public String Move(CSBTrack Track, CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
+        {
+            return Track.CPTable[p_mynextCPID].Position.X + " " + Track.CPTable[p_mynextCPID].Position.Y + " " + "20";
+        }
     }
 
     class CSBCheckPoint
     {
-        private int cp_id;
-        private Coordinates Position;
-
+        public int cp_id { get; }
+        public Coordinates Position { get; } = new Coordinates();
+        public CSBCheckPoint(int x, int y)
+        {
+            Position.X = x;
+            Position.Y = y;
+        }
     }
 
     class CSBTrack
     {
         public int LapsNumber { get; }
         public int CPNumber { get; }
-        // + déclaration d'un array contenant les CP.
+        public CSBCheckPoint[] CPTable { get; }
 
         public CSBTrack (int in1, int in2)
         {
             LapsNumber = in1;
             CPNumber = in2;
+            CPTable = new CSBCheckPoint[CPNumber];
         }
-        public void AddCheckPoint (int X, int Y)
+
+        public void AddCheckPoint (int indice, int X, int Y)
         {
-            ;
+            CPTable.SetValue(new CSBCheckPoint(X, Y), indice);
         }
     }
 
@@ -120,20 +135,21 @@ namespace CodersStrikeBackGOLD
             CSBPod PodHisG = new CSBPod();
             CSBPod PodHisH = new CSBPod();
 
+            // read Track
             int laps = int.Parse(Console.ReadLine());
             int checkpointCount = int.Parse(Console.ReadLine());
-            CSBTrack FullTrack = new CSBTrack(laps, checkpointCount);
-            for (int i = 0; i < FullTrack.LapsNumber; i++)
+            CSBTrack Track = new CSBTrack(laps, checkpointCount);
+            for (int i = 0; i < Track.LapsNumber; i++)
             {
                 inputs = Console.ReadLine().Split(' ');
                 int checkpointX = int.Parse(inputs[0]);
                 int checkpointY = int.Parse(inputs[1]);
-                FullTrack.AddCheckPoint(checkpointX, checkpointY);
+                Track.AddCheckPoint(i, checkpointX, checkpointY);
             }
-
             // game loop
             while (true)
             {
+                // read Pods
                 for (int i = 0; i < 4; i++)
                 {
                     inputs = Console.ReadLine().Split(' ');
@@ -143,7 +159,21 @@ namespace CodersStrikeBackGOLD
                     int vy = int.Parse(inputs[3]); // y speed of pod
                     int angle = int.Parse(inputs[4]); // angle of pod
                     int nextCheckPointId = int.Parse(inputs[5]); // next check point id of pod
-
+                    switch(i)
+                    {
+                        case 0:
+                            PodMyG.Update(x, y, vx, vy, angle, nextCheckPointId);
+                            break;
+                        case 1:
+                            PodMyH.Update(x, y, vx, vy, angle, nextCheckPointId);
+                            break;
+                        case 2:
+                            PodHisG.Update(x, y, vx, vy, angle, nextCheckPointId);
+                            break;
+                        case 3:
+                            PodHisH.Update(x, y, vx, vy, angle, nextCheckPointId);
+                            break;
+                    }
                 }
 
                 // Write an action using Console.WriteLine()
@@ -151,8 +181,12 @@ namespace CodersStrikeBackGOLD
                 // You have to output the target Coordinates
                 // followed by the power (0 <= thrust <= 100)
                 // i.e.: "x y thrust"
-                Console.WriteLine("8000 4500 100");
-                Console.WriteLine("8000 4500 100");
+
+                PodMyG.Update(Track);
+                PodMyH.Update(Track);
+
+                Console.WriteLine(PodMyG.Move(Track, PodMyH, PodHisG, PodHisH));
+                Console.WriteLine(PodMyH.Move(Track, PodMyG, PodHisG, PodHisH));
             }
         }
     }
