@@ -7,6 +7,12 @@ using System.Collections.Generic;
 
 namespace CodersStrikeBackGOLD
 {
+    struct Coordinates
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+    }
+
     static class CSBCompute
     {
 
@@ -14,35 +20,20 @@ namespace CodersStrikeBackGOLD
 
     class CSBPod
     {
-        private int p_myprevposX;
-        private int p_myprevposY;
-        private int p_myposX;
-        private int p_myposY;
-        private int p_myspeedX;
-        private int p_myspeedY;
+        private Coordinates p_myprevpos;
+        private Coordinates p_mypos;
+        private Coordinates p_myspeed;
         private int p_myangle;
         private int p_mynextCPID;
 
-        public CSBPod (int myposX, int myposY, int myspeedX, int myspeedY, int myangle, int mynextCPID)
-        {
-            p_myprevposX = myposX;
-            p_myprevposY = myposY;
-            p_myposX = myposX;
-            p_myposY = myposY;
-            p_myspeedX = myspeedX;
-            p_myspeedY = myspeedY;
-            p_myangle = myangle;
-            p_mynextCPID = mynextCPID;
-        }
-
         public void Update(int myposX, int myposY, int myspeedX, int myspeedY, int myangle, int mynextCPID)
         {
-            p_myprevposX = p_myposX;
-            p_myprevposY = p_myposY;
-            p_myposX = myposX;
-            p_myposY = myposY;
-            p_myspeedX = myspeedX;
-            p_myspeedY = myspeedY;
+            p_myprevpos.X = p_mypos.X == 0 ? myposX : p_mypos.X;
+            p_myprevpos.Y = p_mypos.Y == 0 ? myposY : p_mypos.Y;
+            p_mypos.X = myposX;
+            p_mypos.Y = myposY;
+            p_myspeed.X = myspeedX;
+            p_myspeed.Y = myspeedY;
             p_myangle = myangle;
             p_mynextCPID = mynextCPID;
         }
@@ -51,21 +42,20 @@ namespace CodersStrikeBackGOLD
     class CSBCheckPoint
     {
         private int cp_id;
-        private int cp_X;
-        private int cp_Y;
+        private Coordinates Position;
 
     }
 
     class CSBTrack
     {
-        private int t_lapsnumber;
-        private int t_cpnumber;
+        public int LapsNumber { get; }
+        public int CPNumber { get; }
+        // + déclaration d'un array contenant les CP.
 
-        public CSBTrack (int lapsnumber, int cpnumber)
+        public CSBTrack (int in1, int in2)
         {
-            t_lapsnumber = lapsnumber;
-            t_cpnumber = cpnumber;
-            // déclaration d'un array contenant les CP.
+            LapsNumber = in1;
+            CPNumber = in2;
         }
     }
 
@@ -74,13 +64,21 @@ namespace CodersStrikeBackGOLD
         static void Main(string[] args)
         {
             string[] inputs;
+            CSBPod PodMyG = new CSBPod();
+            CSBPod PodMyH = new CSBPod();
+            CSBPod PodHisG = new CSBPod();
+            CSBPod PodHisH = new CSBPod();
+
             int laps = int.Parse(Console.ReadLine());
             int checkpointCount = int.Parse(Console.ReadLine());
-            for (int i = 0; i < checkpointCount; i++)
+            CSBTrack FullTrack = new CSBTrack(laps, checkpointCount);
+
+            for (int i = 0; i < FullTrack.LapsNumber; i++)
             {
                 inputs = Console.ReadLine().Split(' ');
                 int checkpointX = int.Parse(inputs[0]);
                 int checkpointY = int.Parse(inputs[1]);
+
             }
 
             // game loop
@@ -89,17 +87,18 @@ namespace CodersStrikeBackGOLD
                 for (int i = 0; i < 4; i++)
                 {
                     inputs = Console.ReadLine().Split(' ');
-                    int x = int.Parse(inputs[0]); // x position of pod
-                    int y = int.Parse(inputs[1]); // y position of pod
+                    int x = int.Parse(inputs[0]); // x Coordinates of pod
+                    int y = int.Parse(inputs[1]); // y Coordinates of pod
                     int vx = int.Parse(inputs[2]); // x speed of pod
                     int vy = int.Parse(inputs[3]); // y speed of pod
                     int angle = int.Parse(inputs[4]); // angle of pod
                     int nextCheckPointId = int.Parse(inputs[5]); // next check point id of pod
+
                 }
 
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
-                // You have to output the target position
+                // You have to output the target Coordinates
                 // followed by the power (0 <= thrust <= 100)
                 // i.e.: "x y thrust"
                 Console.WriteLine("8000 4500 100");
