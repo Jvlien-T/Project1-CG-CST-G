@@ -48,9 +48,25 @@ namespace CodersStrikeBackGOLD
         }
     }
 
+    class CSBCheckPoint
+    {
+        private int cp_id;
+        private int cp_X;
+        private int cp_Y;
+
+    }
+
     class CSBTrack
     {
+        private int t_lapsnumber;
+        private int t_cpnumber;
 
+        public CSBTrack (int lapsnumber, int cpnumber)
+        {
+            t_lapsnumber = lapsnumber;
+            t_cpnumber = cpnumber;
+            // déclaration d'un array contenant les CP.
+        }
     }
 
     static class CSBProgram
@@ -70,31 +86,19 @@ namespace CodersStrikeBackGOLD
             // game loop
             while (true)
             {
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     inputs = Console.ReadLine().Split(' ');
-                    int x = int.Parse(inputs[0]); // x position of your pod
-                    int y = int.Parse(inputs[1]); // y position of your pod
-                    int vx = int.Parse(inputs[2]); // x speed of your pod
-                    int vy = int.Parse(inputs[3]); // y speed of your pod
-                    int angle = int.Parse(inputs[4]); // angle of your pod
-                    int nextCheckPointId = int.Parse(inputs[5]); // next check point id of your pod
-                }
-                for (int i = 0; i < 2; i++)
-                {
-                    inputs = Console.ReadLine().Split(' ');
-                    int x2 = int.Parse(inputs[0]); // x position of the opponent's pod
-                    int y2 = int.Parse(inputs[1]); // y position of the opponent's pod
-                    int vx2 = int.Parse(inputs[2]); // x speed of the opponent's pod
-                    int vy2 = int.Parse(inputs[3]); // y speed of the opponent's pod
-                    int angle2 = int.Parse(inputs[4]); // angle of the opponent's pod
-                    int nextCheckPointId2 = int.Parse(inputs[5]); // next check point id of the opponent's pod
+                    int x = int.Parse(inputs[0]); // x position of pod
+                    int y = int.Parse(inputs[1]); // y position of pod
+                    int vx = int.Parse(inputs[2]); // x speed of pod
+                    int vy = int.Parse(inputs[3]); // y speed of pod
+                    int angle = int.Parse(inputs[4]); // angle of pod
+                    int nextCheckPointId = int.Parse(inputs[5]); // next check point id of pod
                 }
 
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
-
-
                 // You have to output the target position
                 // followed by the power (0 <= thrust <= 100)
                 // i.e.: "x y thrust"
