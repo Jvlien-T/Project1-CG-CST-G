@@ -13,6 +13,16 @@ namespace CodersStrikeBackGOLD
     {
         public int X { get; set; }
         public int Y { get; set; }
+        public Coordinates(int inputX, int inputY)
+        {
+            X = inputX;
+            Y = inputY;
+        }
+        public Coordinates()
+        {
+            X = 0;
+            Y = 0;
+        }
     }
 
     static public class CSBCompute
@@ -49,8 +59,25 @@ namespace CodersStrikeBackGOLD
         {
             double DriftAngle = AngleACB(CurrentPos, CPPos, PreviousPos);
             double AbsGap = NextCPDistance * Math.Tan(DriftAngle);
-            if (NextCPDistance < 900 && AbsGap > 600) { AbsGap = -1; }
+            // if (NextCPDistance < 900 && AbsGap > 600) { AbsGap = -1; }
             return AbsGap;
+        }
+
+        // fonction qui nous donne l'angle signé entre trois points EastOrigin, CentreAngle et Target
+        static public double AngleOrientePos(Coordinates EastOrigin, Coordinates Target, Coordinates CentreAngle)
+        {
+            double Angle = 0;
+            double tempAngle = AngleACB(EastOrigin, Target, CentreAngle);
+            if (Target.Y > CentreAngle.Y) { Angle = tempAngle; }
+            else if (Target.Y < CentreAngle.Y) { Angle = 360 - tempAngle; }
+            else if (Target.X > CentreAngle.X) { Angle = 0; }
+            else { Angle = 180; }
+            return Angle;
+        }
+        static public double AngleOrienteVecteur(Coordinates EastOrigin, Coordinates Vecteur, Coordinates CentreAngle)
+        {
+            Coordinates Target = new Coordinates(CentreAngle.X + Vecteur.X, CentreAngle.Y + Vecteur.Y);
+            return AngleOrientePos(EastOrigin, Target, CentreAngle);
         }
     }
 
@@ -90,17 +117,21 @@ namespace CodersStrikeBackGOLD
         private Coordinates p_myprevpos = new Coordinates();
         private Coordinates p_mypos = new Coordinates();
         private Coordinates p_myspeed = new Coordinates();
-        private int p_myangle;
-        private int p_mynext1CPID;
-        private int p_mynext2CPID;
-        private int p_mynext3CPID;
         private Coordinates p_mynextmovepos = new Coordinates();
-        private int p_mynextmovespeed = 0;
         private Coordinates p_next1CPpos = new Coordinates();
         private Coordinates p_next2CPpos = new Coordinates();
         private Coordinates p_next3CPpos = new Coordinates();
-        double oldCheckPointDist = 0;
-        double nextCheckpointDist = 0;
+        private Coordinates p_EastAngleOrigin = new Coordinates(16000, 0);
+        private int p_myangle = 0;
+        private int p_mynext1CPID = 1;
+        private int p_mynext2CPID = 2;
+        private int p_mynext3CPID = 3;
+        private int p_mynextmovespeed = 0;
+        private double p_CheckPointPreviousDist = 0;
+        private double p_nextCheckpointDist = 0;
+        private double p_MissingDistNxtCP = 0;
+        private double p_AngleWithNextCP = 0;
+        private double p_MyTrack = 0;
 
         public CSBPod()
         {
@@ -126,6 +157,7 @@ namespace CodersStrikeBackGOLD
             p_myspeed.Y = int.Parse(inputs[3]);
             p_myangle = int.Parse(inputs[4]);
             p_mynext1CPID = int.Parse(inputs[5]);
+            p_EastAngleOrigin.Y = p_mypos.Y;
         }
         public void Update(string rawinputs, CSBTrack Track)
         {
@@ -135,10 +167,12 @@ namespace CodersStrikeBackGOLD
             p_next2CPpos = Track.CPTable[p_mynext2CPID].Position;
             p_mynext3CPID = (p_mynext1CPID + 2) % Track.CPNumber;
             p_next3CPpos = Track.CPTable[p_mynext3CPID].Position;
-            oldCheckPointDist = nextCheckpointDist;
-            nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_next1CPpos);
-            double MissingNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, p_next1CPpos, nextCheckpointDist);
-            
+            p_CheckPointPreviousDist = p_nextCheckpointDist;
+            p_nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_next1CPpos);
+            p_MissingDistNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, p_next1CPpos, p_nextCheckpointDist);
+            p_AngleWithNextCP = CSBCompute.AngleOrientePos(p_EastAngleOrigin, p_next1CPpos, p_mypos);
+            p_MyTrack = CSBCompute.AngleOrienteVecteur(p_EastAngleOrigin, p_myspeed, p_mypos);
+
             // To Be Completed
 
             p_mynextmovepos = p_next1CPpos;
@@ -148,6 +182,14 @@ namespace CodersStrikeBackGOLD
         public String Move(CSBTrack Track, CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
         {
             return p_mynextmovepos.X + " " + p_mynextmovepos.Y + " " + p_mynextmovespeed;
+        }
+
+        public void Debug()
+        {
+            Console.Error.WriteLine("##############################");
+            Console.Error.WriteLine("Position = " + p_mypos.X + " ; " + p_mypos.Y + " . Vitesse = " + p_myspeed.X + " ; " + p_myspeed.Y + " , missing next point : " + p_MissingDistNxtCP);
+            Console.Error.WriteLine("Heading = " + p_myangle + " , Bearing = " + p_AngleWithNextCP + " , Track = " + p_MyTrack);
+            Console.Error.WriteLine("##############################");
         }
     }
 
@@ -185,6 +227,8 @@ namespace CodersStrikeBackGOLD
 
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
+
+                PodMyG.Debug();
 
                 Console.WriteLine(PodMyG.Move(Track, PodMyH, PodHisG, PodHisH));
                 Console.WriteLine(PodMyH.Move(Track, PodMyG, PodHisG, PodHisH));
