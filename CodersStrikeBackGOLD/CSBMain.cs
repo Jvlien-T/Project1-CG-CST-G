@@ -44,13 +44,44 @@ namespace CodersStrikeBackGOLD
             else { return CurveStrengthType.Hairpin; }
         }
 
-        //fonction qui nous donne la distance a laquelle on devrait passer au plus proche du prochain WP
-        static public double ClosestFromNxtWP(Coordinates PreviousPos, Coordinates CurrentPos, Coordinates CPPos, double NextCPDistance)
+        //fonction qui nous donne la distance a laquelle on devrait passer au plus proche du prochain CP
+        static public double ClosestFromNxtCP(Coordinates PreviousPos, Coordinates CurrentPos, Coordinates CPPos, double NextCPDistance)
         {
             double DriftAngle = AngleACB(CurrentPos, CPPos, PreviousPos);
             double AbsGap = NextCPDistance * Math.Tan(DriftAngle);
             if (NextCPDistance < 900 && AbsGap > 600) { AbsGap = -1; }
             return AbsGap;
+        }
+    }
+
+    class CSBCheckPoint
+    {
+        public int cp_id { get; }
+        public Coordinates Position { get; } = new Coordinates();
+        public CSBCheckPoint(int x, int y)
+        {
+            Position.X = x;
+            Position.Y = y;
+        }
+    }
+
+    class CSBTrack
+    {
+        public int LapsNumber { get; }
+        public int CPNumber { get; }
+        public CSBCheckPoint[] CPTable { get; }
+
+        public CSBTrack(int in1, int in2)
+        {
+            LapsNumber = in1;
+            CPNumber = in2;
+            CPTable = new CSBCheckPoint[CPNumber];
+        }
+
+        public void AddCheckPoint(int indice, string rawinputs)
+        {
+            string[] inputs = rawinputs.Split(' ');
+            CPTable.SetValue(new CSBCheckPoint(int.Parse(inputs[0]), int.Parse(inputs[1])), indice);
         }
     }
 
@@ -106,9 +137,8 @@ namespace CodersStrikeBackGOLD
             p_next3CPpos = Track.CPTable[p_mynext3CPID].Position;
             oldCheckPointDist = nextCheckpointDist;
             nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_next1CPpos);
-            double GapWithNxtWP = CSBCompute.ClosestFromNxtWP(p_myprevpos, p_mypos, p_next1CPpos, nextCheckpointDist);
-
-
+            double MissingNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, p_next1CPpos, nextCheckpointDist);
+            
             // To Be Completed
 
             p_mynextmovepos = p_next1CPpos;
@@ -121,38 +151,7 @@ namespace CodersStrikeBackGOLD
         }
     }
 
-    class CSBCheckPoint
-    {
-        public int cp_id { get; }
-        public Coordinates Position { get; } = new Coordinates();
-        public CSBCheckPoint(int x, int y)
-        {
-            Position.X = x;
-            Position.Y = y;
-        }
-    }
-
-    class CSBTrack
-    {
-        public int LapsNumber { get; }
-        public int CPNumber { get; }
-        public CSBCheckPoint[] CPTable { get; }
-
-        public CSBTrack (int in1, int in2)
-        {
-            LapsNumber = in1;
-            CPNumber = in2;
-            CPTable = new CSBCheckPoint[CPNumber];
-        }
-
-        public void AddCheckPoint (int indice, string rawinputs)
-        {
-            string[] inputs = rawinputs.Split(' ');
-            CPTable.SetValue(new CSBCheckPoint(int.Parse(inputs[0]), int.Parse(inputs[1])), indice);
-        }
-    }
-
-    static class Player
+    static class CSBMain
     {
         static void Main(string[] args)
         {
