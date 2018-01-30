@@ -78,7 +78,7 @@ namespace CodersStrikeBackGOLD
         }
         public void Update(string rawinputs)
         {
-            string inputs = rawinputs.Split(' ');
+            string[] inputs = rawinputs.Split(' ');
             if (p_mypos.X == -1 && p_mypos.Y == -1)
             {
                 p_myprevpos.X = int.Parse(inputs[0]);
@@ -157,7 +157,6 @@ namespace CodersStrikeBackGOLD
         static void Main(string[] args)
         {
             string rawinputs;
-            string[] inputs;
             CSBPod PodMyG = new CSBPod();
             CSBPod PodMyH = new CSBPod();
             CSBPod PodHisG = new CSBPod();
