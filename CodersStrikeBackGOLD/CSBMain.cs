@@ -69,9 +69,9 @@ namespace CodersStrikeBackGOLD
             double Angle = 0;
             double tempAngle = AngleACB(EastOrigin, Target, CentreAngle);
             if (Target.Y > CentreAngle.Y) { Angle = tempAngle; }
-            else if (Target.Y < CentreAngle.Y) { Angle = 360 - tempAngle; }
+            else if (Target.Y < CentreAngle.Y) { Angle = 2 * Math.PI - tempAngle; }
             else if (Target.X > CentreAngle.X) { Angle = 0; }
-            else { Angle = 180; }
+            else { Angle = Math.PI; }
             return Angle;
         }
         static public double AngleOrienteVecteur(Coordinates EastOrigin, Coordinates Vecteur, Coordinates CentreAngle)
@@ -188,7 +188,7 @@ namespace CodersStrikeBackGOLD
         {
             Console.Error.WriteLine("##############################");
             Console.Error.WriteLine("Position = " + p_mypos.X + " ; " + p_mypos.Y + " . Vitesse = " + p_myspeed.X + " ; " + p_myspeed.Y + " , missing next point : " + p_MissingDistNxtCP);
-            Console.Error.WriteLine("Heading = " + p_myangle + " , Bearing = " + p_AngleWithNextCP + " , Track = " + p_MyTrack);
+            Console.Error.WriteLine("Cap = " + p_myangle + " , Relevement Abs = " + (p_AngleWithNextCP / Math.PI * 180) + " , Chemin = " + (p_MyTrack / Math.PI * 180));
             Console.Error.WriteLine("##############################");
         }
     }
