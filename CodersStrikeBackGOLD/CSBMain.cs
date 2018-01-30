@@ -60,10 +60,14 @@ namespace CodersStrikeBackGOLD
         private Coordinates p_mypos = new Coordinates();
         private Coordinates p_myspeed = new Coordinates();
         private int p_myangle;
-        private int p_mynextCPID;
+        private int p_mynext1CPID;
+        private int p_mynext2CPID;
+        private int p_mynext3CPID;
         private Coordinates p_mynextmovepos = new Coordinates();
         private int p_mynextmovespeed = 0;
-        private Coordinates p_nextCPpos = new Coordinates();
+        private Coordinates p_next1CPpos = new Coordinates();
+        private Coordinates p_next2CPpos = new Coordinates();
+        private Coordinates p_next3CPpos = new Coordinates();
         double oldCheckPointDist = 0;
         double nextCheckpointDist = 0;
 
@@ -75,7 +79,6 @@ namespace CodersStrikeBackGOLD
         public void Update(string rawinputs)
         {
             string inputs = rawinputs.Split(' ');
-
             if (p_mypos.X == -1 && p_mypos.Y == -1)
             {
                 p_myprevpos.X = int.Parse(inputs[0]);
@@ -91,20 +94,24 @@ namespace CodersStrikeBackGOLD
             p_myspeed.X = int.Parse(inputs[2]);
             p_myspeed.Y = int.Parse(inputs[3]);
             p_myangle = int.Parse(inputs[4]);
-            p_mynextCPID = int.Parse(inputs[5]);
+            p_mynext1CPID = int.Parse(inputs[5]);
         }
         public void Update(string rawinputs, CSBTrack Track)
         {
             this.Update(rawinputs);
-            p_nextCPpos = Track.CPTable[p_mynextCPID].Position;
+            p_next1CPpos = Track.CPTable[p_mynext1CPID].Position;
+            p_mynext2CPID = (p_mynext1CPID + 1) % Track.CPNumber;
+            p_next2CPpos = Track.CPTable[p_mynext2CPID].Position;
+            p_mynext3CPID = (p_mynext1CPID + 2) % Track.CPNumber;
+            p_next3CPpos = Track.CPTable[p_mynext3CPID].Position;
             oldCheckPointDist = nextCheckpointDist;
-            nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_nextCPpos);
-            double GapWithNxtWP = CSBCompute.ClosestFromNxtWP(p_myprevpos, p_mypos, p_nextCPpos, nextCheckpointDist);
+            nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_next1CPpos);
+            double GapWithNxtWP = CSBCompute.ClosestFromNxtWP(p_myprevpos, p_mypos, p_next1CPpos, nextCheckpointDist);
 
 
             // To Be Completed
 
-            p_mynextmovepos = p_nextCPpos;
+            p_mynextmovepos = p_next1CPpos;
             p_mynextmovespeed = 66;
         }
 
