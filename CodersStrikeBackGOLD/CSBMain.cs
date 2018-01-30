@@ -72,24 +72,26 @@ namespace CodersStrikeBackGOLD
             p_mypos.X = -1;
             p_mypos.Y = -1;
         }
-        public void Update(int myposX, int myposY, int myspeedX, int myspeedY, int myangle, int mynextCPID)
+        public void Update(string rawinputs)
         {
+            string inputs = rawinputs.Split(' ');
+
             if (p_mypos.X == -1 && p_mypos.Y == -1)
             {
-                p_myprevpos.X = myposX;
-                p_myprevpos.Y = myposY;
+                p_myprevpos.X = int.Parse(inputs[0]);
+                p_myprevpos.Y = int.Parse(inputs[1]);
             }
             else
             {
                 p_myprevpos.X = p_mypos.X;
                 p_myprevpos.Y = p_mypos.Y;
             }
-            p_mypos.X = myposX;
-            p_mypos.Y = myposY;
-            p_myspeed.X = myspeedX;
-            p_myspeed.Y = myspeedY;
-            p_myangle = myangle;
-            p_mynextCPID = mynextCPID;
+            p_mypos.X = int.Parse(inputs[0]);
+            p_mypos.Y = int.Parse(inputs[1]);
+            p_myspeed.X = int.Parse(inputs[2]);
+            p_myspeed.Y = int.Parse(inputs[3]);
+            p_myangle = int.Parse(inputs[4]);
+            p_mynextCPID = int.Parse(inputs[5]);
         }
         public void Update(CSBTrack Track)
         {
@@ -135,9 +137,10 @@ namespace CodersStrikeBackGOLD
             CPTable = new CSBCheckPoint[CPNumber];
         }
 
-        public void AddCheckPoint (int indice, int X, int Y)
+        public void AddCheckPoint (int indice, string rawinputs)
         {
-            CPTable.SetValue(new CSBCheckPoint(X, Y), indice);
+            string[] inputs = rawinputs.Split(' ');
+            CPTable.SetValue(new CSBCheckPoint(int.Parse(inputs[0]), int.Parse(inputs[1])), indice);
         }
     }
 
@@ -159,51 +162,26 @@ namespace CodersStrikeBackGOLD
             for (int i = 0; i < Track.CPNumber; i++)
             {
                 rawinputs = Console.ReadLine();
-                inputs = rawinputs.Split(' ');
-                int checkpointX = int.Parse(inputs[0]);
-                int checkpointY = int.Parse(inputs[1]);
-                Track.AddCheckPoint(i, checkpointX, checkpointY);
+                Track.AddCheckPoint(i, rawinputs);
             }
             // game loop
             while (true)
             {
                 // read Pods
-                for (int i = 0; i < 4; i++)
-                {
-                    rawinputs = Console.ReadLine();
-                    inputs = rawinputs.Split(' ');
-                    int x = int.Parse(inputs[0]); // x Coordinates of pod
-                    int y = int.Parse(inputs[1]); // y Coordinates of pod
-                    int vx = int.Parse(inputs[2]); // x speed of pod
-                    int vy = int.Parse(inputs[3]); // y speed of pod
-                    int angle = int.Parse(inputs[4]); // angle of pod
-                    int nextCheckPointId = int.Parse(inputs[5]); // next check point id of pod
-                    switch(i)
-                    {
-                        case 0:
-                            PodMyG.Update(x, y, vx, vy, angle, nextCheckPointId);
-                            break;
-                        case 1:
-                            PodMyH.Update(x, y, vx, vy, angle, nextCheckPointId);
-                            break;
-                        case 2:
-                            PodHisG.Update(x, y, vx, vy, angle, nextCheckPointId);
-                            break;
-                        case 3:
-                            PodHisH.Update(x, y, vx, vy, angle, nextCheckPointId);
-                            break;
-                    }
-                }
-
-                // Write an action using Console.WriteLine()
-                // To debug: Console.Error.WriteLine("Debug messages...");
-                // You have to output the target Coordinates
-                // followed by the power (0 <= thrust <= 100)
-                // i.e.: "x y thrust"
+                rawinputs = Console.ReadLine();
+                PodMyG.Update(rawinputs);
+                rawinputs = Console.ReadLine();
+                PodMyH.Update(rawinputs);
+                rawinputs = Console.ReadLine();
+                PodHisG.Update(rawinputs);
+                rawinputs = Console.ReadLine();
+                PodHisH.Update(rawinputs);
 
                 PodMyG.Update(Track);
                 PodMyH.Update(Track);
 
+                // Write an action using Console.WriteLine()
+                // To debug: Console.Error.WriteLine("Debug messages...");
                 Console.WriteLine(PodMyG.Move(Track, PodMyH, PodHisG, PodHisH));
                 Console.WriteLine(PodMyH.Move(Track, PodMyG, PodHisG, PodHisH));
             }
