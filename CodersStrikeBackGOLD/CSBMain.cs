@@ -93,8 +93,9 @@ namespace CodersStrikeBackGOLD
             p_myangle = int.Parse(inputs[4]);
             p_mynextCPID = int.Parse(inputs[5]);
         }
-        public void Update(CSBTrack Track)
+        public void Update(string rawinputs, CSBTrack Track)
         {
+            this.Update(rawinputs);
             p_nextCPpos = Track.CPTable[p_mynextCPID].Position;
             oldCheckPointDist = nextCheckpointDist;
             nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_nextCPpos);
@@ -169,19 +170,17 @@ namespace CodersStrikeBackGOLD
             {
                 // read Pods
                 rawinputs = Console.ReadLine();
-                PodMyG.Update(rawinputs);
+                PodMyG.Update(rawinputs, Track);
                 rawinputs = Console.ReadLine();
-                PodMyH.Update(rawinputs);
+                PodMyH.Update(rawinputs, Track);
                 rawinputs = Console.ReadLine();
                 PodHisG.Update(rawinputs);
                 rawinputs = Console.ReadLine();
                 PodHisH.Update(rawinputs);
 
-                PodMyG.Update(Track);
-                PodMyH.Update(Track);
-
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
+
                 Console.WriteLine(PodMyG.Move(Track, PodMyH, PodHisG, PodHisH));
                 Console.WriteLine(PodMyH.Move(Track, PodMyG, PodHisG, PodHisH));
             }
