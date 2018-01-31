@@ -175,6 +175,14 @@ namespace CodersStrikeBackGOLD
 
             // To Be Completed
 
+
+
+
+
+
+
+
+
             p_mynextmovepos = p_next1CPpos;
             p_mynextmovespeed = 66;
         }
