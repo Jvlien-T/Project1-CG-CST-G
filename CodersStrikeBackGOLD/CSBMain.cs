@@ -121,13 +121,11 @@ namespace CodersStrikeBackGOLD
 
     class CSBPod
     {
+        private Coordinates[] Next3CPRoute = new Coordinates[3];
         private Coordinates p_myprevpos = new Coordinates();
         private Coordinates p_mypos = new Coordinates();
         private Coordinates p_myspeed = new Coordinates();
         private Coordinates p_mynextmovepos = new Coordinates();
-        private Coordinates p_next1CPpos = new Coordinates();
-        private Coordinates p_next2CPpos = new Coordinates();
-        private Coordinates p_next3CPpos = new Coordinates();
         private Coordinates p_EastAngleOrigin = new Coordinates(33000, 0);
         private Coordinates p_MyEstimatedNextPos = new Coordinates();
         private int p_MyAngleDeg = 0;
@@ -152,7 +150,9 @@ namespace CodersStrikeBackGOLD
             p_mypos.X = -1;
             p_mypos.Y = -1;
         }
-        public void Update(string rawinputs)
+
+
+        public void Update(string rawinputs, CSBTrack Track)
         {
             string[] inputs = rawinputs.Split(' ');
             if (p_mypos.X == -1 && p_mypos.Y == -1)
@@ -170,37 +170,48 @@ namespace CodersStrikeBackGOLD
             p_myspeed.X = int.Parse(inputs[2]);
             p_myspeed.Y = int.Parse(inputs[3]);
             p_MyAngleDeg = int.Parse(inputs[4]);
+
             p_mynext1CPID = int.Parse(inputs[5]);
+            Next3CPRoute[0] = Track.CPTable[p_mynext1CPID].Position;
+            p_mynext2CPID = (p_mynext1CPID + 1) % Track.CPNumber;
+            Next3CPRoute[1] = Track.CPTable[p_mynext2CPID].Position;
+            p_mynext3CPID = (p_mynext1CPID + 2) % Track.CPNumber;
+            Next3CPRoute[2] = Track.CPTable[p_mynext3CPID].Position;
+
             p_EastAngleOrigin.Y = p_mypos.Y;
+
             p_MyEstimatedNextPos.X = p_mypos.X + p_myspeed.X;
             p_MyEstimatedNextPos.Y = p_mypos.Y + p_myspeed.Y;
-        }
-        public void Update(string rawinputs, CSBTrack Track)
-        {
-            this.Update(rawinputs);
-            p_next1CPpos = Track.CPTable[p_mynext1CPID].Position;
-            p_mynext2CPID = (p_mynext1CPID + 1) % Track.CPNumber;
-            p_next2CPpos = Track.CPTable[p_mynext2CPID].Position;
-            p_mynext3CPID = (p_mynext1CPID + 2) % Track.CPNumber;
-            p_next3CPpos = Track.CPTable[p_mynext3CPID].Position;
 
             p_nextCheckPointPreviousDist = p_nextCheckpointDist;
-            p_nextCheckpointDist = CSBCompute.DistAB(p_mypos, p_next1CPpos);
-            p_MissingDistNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, p_next1CPpos, p_nextCheckpointDist);
-            p_NextCPRawAngle = CSBCompute.AngleOrientePos(p_EastAngleOrigin, p_next1CPpos, p_mypos);
-            p_NextCPTrackRelativeAngle = CSBCompute.AngleACB(p_MyEstimatedNextPos, p_next1CPpos, p_mypos);
+            p_nextCheckpointDist = CSBCompute.DistAB(p_mypos, Next3CPRoute[0]);
+            p_MissingDistNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, Next3CPRoute[0], p_nextCheckpointDist);
+            p_NextCPRawAngle = CSBCompute.AngleOrientePos(p_EastAngleOrigin, Next3CPRoute[0], p_mypos);
+            p_NextCPTrackRelativeAngle = CSBCompute.AngleACB(p_MyEstimatedNextPos, Next3CPRoute[0], p_mypos);
             p_NextCPRelativeAngleDeg = ((int)(p_NextCPRawAngle / Math.PI * 180) - p_MyAngleDeg);
             p_MyAbsoluteSpeed = CSBCompute.DistAB(p_mypos, p_MyEstimatedNextPos);
 
             p_MyTrack = CSBCompute.AngleOrienteVecteur(p_EastAngleOrigin, p_myspeed, p_mypos);
+        }
 
+
+
+        public void Compute(CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
+        {
+            
+        }
+
+
+
+        public String Move()
+        {
             if (p_nextCheckpointDist < (2 * p_MyAbsoluteSpeed) && p_MissingDistNxtCP < 400)
             {
-                p_mynextmovepos = p_next2CPpos;
+                p_mynextmovepos = Next3CPRoute[1];
             }
             else
             {
-                p_mynextmovepos = p_next1CPpos;
+                p_mynextmovepos = Next3CPRoute[0];
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
@@ -221,19 +232,14 @@ namespace CodersStrikeBackGOLD
                 }
             }
 
-
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (p_MyAbsoluteSpeed > 200 && p_nextCheckpointDist < 1000) { p_MyNextMoveThrust = p_MyNextMoveThrust / 5; }
-
+            if (p_MyAbsoluteSpeed > p_nextCheckpointDist) { p_MyNextMoveThrust = p_MyNextMoveThrust / 5; }
 
             // selon les conditions, on décide si on va utiliser le boost ou pas :
-            if (p_BoostUsed == false && p_MissingDistNxtCP < 550 && p_nextCheckpointDist > 5555 && p_MyAbsoluteSpeed > 100) { p_UseBoostCommand = true;  }
+            if (p_BoostUsed == false && p_MissingDistNxtCP < 550 && p_nextCheckpointDist > 5555 && p_MyAbsoluteSpeed > 100) { p_UseBoostCommand = true; }
             else { p_UseBoostCommand = false; }
 
-        }
-
-        public String Move(CSBTrack Track, CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
-        {
+            // LET'S MOVE
             if (p_UseShieldCommand)
             {
                 return p_mynextmovepos.X + " " + p_mynextmovepos.Y + " SHIELD";
@@ -287,17 +293,20 @@ namespace CodersStrikeBackGOLD
                 rawinputs = Console.ReadLine();
                 PodMyH.Update(rawinputs, Track);
                 rawinputs = Console.ReadLine();
-                PodHisG.Update(rawinputs);
+                PodHisG.Update(rawinputs, Track);
                 rawinputs = Console.ReadLine();
-                PodHisH.Update(rawinputs);
+                PodHisH.Update(rawinputs, Track);
 
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
 
                 PodMyG.Debug();
 
-                Console.WriteLine(PodMyG.Move(Track, PodMyH, PodHisG, PodHisH));
-                Console.WriteLine(PodMyH.Move(Track, PodMyG, PodHisG, PodHisH));
+                PodMyG.Compute(PodMyH, PodHisG, PodHisH);
+                PodMyH.Compute(PodMyG, PodHisG, PodHisH);
+
+                Console.WriteLine(PodMyG.Move());
+                Console.WriteLine(PodMyH.Move());
             }
         }
     }
