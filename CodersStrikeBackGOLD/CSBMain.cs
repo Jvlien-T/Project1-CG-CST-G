@@ -122,56 +122,56 @@ namespace CodersStrikeBackGOLD
     class CSBPod
     {
         private Coordinates[] Next3CPRoute = new Coordinates[3];
-        private Coordinates p_myprevpos = new Coordinates();
-        private Coordinates p_mypos = new Coordinates();
-        private Coordinates p_myspeed = new Coordinates();
-        private Coordinates p_mynextmovepos = new Coordinates();
-        private Coordinates p_EastAngleOrigin = new Coordinates(33000, 0);
-        private Coordinates p_MyEstimatedNextPos = new Coordinates();
-        private int p_MyAngleDeg = 0;
+        private Coordinates p_PrevPosMe = new Coordinates();
+        private Coordinates p_PosMe = new Coordinates();
+        private Coordinates p_PosMySpeed = new Coordinates();
+        private Coordinates p_PosForMyNextMove = new Coordinates();
+        private Coordinates p_PosEastAngleOrigin = new Coordinates(33000, 0);
+        private Coordinates p_PosMyEstimatedNext = new Coordinates();
+        private int p_DegAngleOrgHead = 0;
         private int p_mynext1CPID = 1;
         private int p_mynext2CPID = 2;
         private int p_mynext3CPID = 3;
-        private int p_MyNextMoveThrust = 0;
+        private int p_ThrustForMyNextMove = 0;
         private int DriftSide = 0;
         private bool p_BoostUsed = false;
         private bool p_UseBoostCommand = false;
         private bool p_UseShieldCommand = false;
-        private double p_nextCheckPointPreviousDist = 0;
-        private double p_nextCheckpointDist = 0;
-        private double p_MissingDistNxtCP = 0;
-        private double p_NextCPRawAngle = 0;
-        private double p_NextCPTrackRelativeAngleDeg = 0;
-        private double p_NextCPRelativeAngleDeg = 0;
-        private double p_MyTrack = 0;
-        private double p_MyAbsoluteSpeed = 0;
+        private double p_PrevDistNextCheckPoint = 0;
+        private double p_DistNextCheckpoint = 0;
+        private double p_DistMissingNxtCP = 0;
+        private double p_RadAngleOrgNextCP = 0;
+        private double p_DegAngleTrackNextCP = 0;
+        private double p_DegAngleHeadNextCP = 0;
+        private double p_RadAngleOrgTrack = 0;
+        private double p_DistMySpeed = 0;
 
         public CSBPod()
         {
-            p_mypos.X = -1;
-            p_mypos.Y = -1;
+            p_PosMe.X = -1;
+            p_PosMe.Y = -1;
         }
 
 
         public void Update(string rawinputs, CSBTrack Track)
         {
             string[] inputs = rawinputs.Split(' ');
-            if (p_mypos.X == -1 && p_mypos.Y == -1)
+            if (p_PosMe.X == -1 && p_PosMe.Y == -1)
             {
-                p_myprevpos.X = int.Parse(inputs[0]);
-                p_myprevpos.Y = int.Parse(inputs[1]);
+                p_PrevPosMe.X = int.Parse(inputs[0]);
+                p_PrevPosMe.Y = int.Parse(inputs[1]);
             }
             else
             {
-                p_myprevpos.X = p_mypos.X;
-                p_myprevpos.Y = p_mypos.Y;
+                p_PrevPosMe.X = p_PosMe.X;
+                p_PrevPosMe.Y = p_PosMe.Y;
             }
-            p_mypos.X = int.Parse(inputs[0]);
-            p_mypos.Y = int.Parse(inputs[1]);
-            p_myspeed.X = int.Parse(inputs[2]);
-            p_myspeed.Y = int.Parse(inputs[3]);
-            p_MyAngleDeg = int.Parse(inputs[4]);
-            p_EastAngleOrigin.Y = p_mypos.Y;
+            p_PosMe.X = int.Parse(inputs[0]);
+            p_PosMe.Y = int.Parse(inputs[1]);
+            p_PosMySpeed.X = int.Parse(inputs[2]);
+            p_PosMySpeed.Y = int.Parse(inputs[3]);
+            p_DegAngleOrgHead = int.Parse(inputs[4]);
+            p_PosEastAngleOrigin.Y = p_PosMe.Y;
 
             // Next 3 CP from Track
             p_mynext1CPID = int.Parse(inputs[5]);
@@ -182,22 +182,23 @@ namespace CodersStrikeBackGOLD
             Next3CPRoute[2] = Track.CPTable[p_mynext3CPID].Position;
 
             // Speed
-            p_MyEstimatedNextPos.X = p_mypos.X + p_myspeed.X;
-            p_MyEstimatedNextPos.Y = p_mypos.Y + p_myspeed.Y;
-            p_MyAbsoluteSpeed = CSBCompute.DistAB(p_mypos, p_MyEstimatedNextPos);
-            p_MyTrack = CSBCompute.AngleOrienteVecteur(p_EastAngleOrigin, p_myspeed, p_mypos);
+            p_PosMyEstimatedNext.X = p_PosMe.X + p_PosMySpeed.X;
+            p_PosMyEstimatedNext.Y = p_PosMe.Y + p_PosMySpeed.Y;
+            p_DistMySpeed = CSBCompute.DistAB(p_PosMe, p_PosMyEstimatedNext);
 
             // Angles
-            p_NextCPRawAngle = CSBCompute.AngleOrientePos(p_EastAngleOrigin, Next3CPRoute[0], p_mypos);
-            // p_NextCPTrackRelativeAngleDeg = CSBCompute.AngleACB(p_MyEstimatedNextPos, Next3CPRoute[0], p_mypos);
-            p_NextCPTrackRelativeAngleDeg = CSBCompute.mod((int)((p_NextCPRawAngle - p_MyTrack) / Math.PI * 180), 360);
-            if (p_NextCPTrackRelativeAngleDeg > 180) { p_NextCPTrackRelativeAngleDeg = (360 - p_NextCPTrackRelativeAngleDeg); }
-            p_NextCPRelativeAngleDeg = ((p_NextCPRawAngle / Math.PI * 180) - p_MyAngleDeg);
+            p_RadAngleOrgTrack = CSBCompute.AngleOrienteVecteur(p_PosEastAngleOrigin, p_PosMySpeed, p_PosMe);
+            p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute[0], p_PosMe);
+            // p_DegAngleTrackNextCP = CSBCompute.AngleACB(p_PosMyEstimatedNext, Next3CPRoute[0], p_PosMe);
+            // p_DegAngleTrackNextCP = CSBCompute.mod((int)((p_RadAngleOrgNextCP - p_RadAngleOrgTrack) / Math.PI * 180), 360);
+            p_DegAngleTrackNextCP = (p_RadAngleOrgNextCP - p_RadAngleOrgTrack + 360) % 360;
+            if (p_DegAngleTrackNextCP > 180) { p_DegAngleTrackNextCP -= 360; }
+            p_DegAngleHeadNextCP = ((p_RadAngleOrgNextCP / Math.PI * 180) - p_DegAngleOrgHead);
 
             // Distances
-            p_nextCheckPointPreviousDist = p_nextCheckpointDist;
-            p_nextCheckpointDist = CSBCompute.DistAB(p_mypos, Next3CPRoute[0]);
-            p_MissingDistNxtCP = CSBCompute.ClosestFromNxtCP(p_myprevpos, p_mypos, Next3CPRoute[0], p_nextCheckpointDist);
+            p_PrevDistNextCheckPoint = p_DistNextCheckpoint;
+            p_DistNextCheckpoint = CSBCompute.DistAB(p_PosMe, Next3CPRoute[0]);
+            p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosMe, Next3CPRoute[0], p_DistNextCheckpoint);
 
             // Drift
 
@@ -214,20 +215,20 @@ namespace CodersStrikeBackGOLD
         // Move, va se baser sur la table des 3 prochains points de route pour déplacer le POD sans se soucier des perturbations.
         public String Move()
         {
-            if (p_nextCheckpointDist < (2 * p_MyAbsoluteSpeed) && p_MissingDistNxtCP < 400)
-            { p_mynextmovepos = Next3CPRoute[1]; }
+            if (p_DistNextCheckpoint < (2 * p_DistMySpeed) && p_DistMissingNxtCP < 400)
+            { p_PosForMyNextMove = Next3CPRoute[1]; }
             else
-            { p_mynextmovepos = Next3CPRoute[0]; }
+            { p_PosForMyNextMove = Next3CPRoute[0]; }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_NextCPRelativeAngleDeg) < 80) { p_MyNextMoveThrust = 100; }
-            else { p_MyNextMoveThrust = 0; }
+            if (Math.Abs(p_DegAngleHeadNextCP) < 80) { p_ThrustForMyNextMove = 100; }
+            else { p_ThrustForMyNextMove = 0; }
 
 
             // selon la vitesse et la dérive, on corrige le cap :
-            if (p_MissingDistNxtCP > 555 && p_nextCheckpointDist < 5000)
+            if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 5000)
             {
-                if (p_nextCheckpointDist < (2 * p_MyAbsoluteSpeed))
+                if (p_DistNextCheckpoint < (2 * p_DistMySpeed))
                 {
                     // je voudrais appliquer une grosse rotation du prochain CP pour déterminer mon prochain point de passage
                 }
@@ -238,35 +239,34 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (p_MyAbsoluteSpeed > p_nextCheckpointDist) { p_MyNextMoveThrust = p_MyNextMoveThrust / 5; }
+            if (p_DistMySpeed > p_DistNextCheckpoint) { p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5; }
 
             // selon les conditions, on décide si on va utiliser le boost ou pas :
-            if (p_BoostUsed == false && Math.Abs(p_MissingDistNxtCP) < 555 && p_nextCheckpointDist > 5555 && p_MyAbsoluteSpeed > 111) { p_UseBoostCommand = true; }
+            if (p_BoostUsed == false && Math.Abs(p_DistMissingNxtCP) < 555 && p_DistNextCheckpoint > 5555 && p_DistMySpeed > 111) { p_UseBoostCommand = true; }
 
             // LET'S MOVE
             if (p_UseShieldCommand)
             {
-                return p_mynextmovepos.X + " " + p_mynextmovepos.Y + " SHIELD";
+                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " SHIELD";
             }
             else if (p_UseBoostCommand)
             {
-                return p_mynextmovepos.X + " " + p_mynextmovepos.Y + " BOOST";
+                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST";
                 p_BoostUsed = true;
                 p_UseBoostCommand = false;
             }
             else
             {
-                return p_mynextmovepos.X + " " + p_mynextmovepos.Y + " " + p_MyNextMoveThrust;
+                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " " + p_ThrustForMyNextMove;
             }
         }
 
         public void Debug()
         {
             Console.Error.WriteLine("##############################");
-            Console.Error.WriteLine("Position = " + p_mypos.X + " ; " + p_mypos.Y + " . Vitesse = " + p_MyAbsoluteSpeed + " , missing next point : " + p_MissingDistNxtCP);
-            Console.Error.WriteLine("heading = " + p_MyAngleDeg + " , bearing = " + p_NextCPRelativeAngleDeg + " , CPAngle = " + (p_NextCPRawAngle / Math.PI * 180));
-            Console.Error.WriteLine("formule : " + (int)(p_NextCPRawAngle / Math.PI * 180) + " - " + (int)(p_MyTrack / Math.PI * 180));
-            Console.Error.WriteLine("p_NextCPTrackRelativeAngleDeg = " + p_NextCPTrackRelativeAngleDeg);
+            Console.Error.WriteLine("Vitesse = " + p_DistMySpeed + " , missing next point : " + p_DistMissingNxtCP);
+            Console.Error.WriteLine("heading = " + p_DegAngleOrgHead + " , bearing = " + p_DegAngleHeadNextCP + " , CPAngle = " + (p_RadAngleOrgNextCP / Math.PI * 180));
+            Console.Error.WriteLine("Drift = " + p_DegAngleTrackNextCP);
             Console.Error.WriteLine("##############################");
         }
     }
