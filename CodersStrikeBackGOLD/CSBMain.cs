@@ -133,7 +133,7 @@ namespace CodersStrikeBackGOLD
         private int p_mynext2CPID = 2;
         private int p_mynext3CPID = 3;
         private int p_ThrustForMyNextMove = 0;
-        private int DriftSide = 0;
+        private bool FirstExecCycle = true;
         private bool p_BoostUsed = false;
         private bool p_UseBoostCommand = false;
         private bool p_UseShieldCommand = false;
@@ -189,19 +189,16 @@ namespace CodersStrikeBackGOLD
             // Angles
             p_RadAngleOrgTrack = CSBCompute.AngleOrienteVecteur(p_PosEastAngleOrigin, p_PosMySpeed, p_PosMe);
             p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute[0], p_PosMe);
-            // p_DegAngleTrackNextCP = CSBCompute.AngleACB(p_PosMyEstimatedNext, Next3CPRoute[0], p_PosMe);
-            // p_DegAngleTrackNextCP = CSBCompute.mod((int)((p_RadAngleOrgNextCP - p_RadAngleOrgTrack) / Math.PI * 180), 360);
-            p_DegAngleTrackNextCP = (p_RadAngleOrgNextCP - p_RadAngleOrgTrack + 360) % 360;
-            if (p_DegAngleTrackNextCP > 180) { p_DegAngleTrackNextCP -= 360; }
+            if (FirstExecCycle) { p_DegAngleOrgHead = (int)(p_RadAngleOrgNextCP / Math.PI * 180); FirstExecCycle = false; }
             p_DegAngleHeadNextCP = ((p_RadAngleOrgNextCP / Math.PI * 180) - p_DegAngleOrgHead);
+            // Drift Angles
+            p_DegAngleTrackNextCP = ((p_RadAngleOrgNextCP - p_RadAngleOrgTrack) / Math.PI * 180 + 360) % 360;
+                if (p_DegAngleTrackNextCP > 180) { p_DegAngleTrackNextCP -= 360; }
 
             // Distances
             p_PrevDistNextCheckPoint = p_DistNextCheckpoint;
             p_DistNextCheckpoint = CSBCompute.DistAB(p_PosMe, Next3CPRoute[0]);
             p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosMe, Next3CPRoute[0], p_DistNextCheckpoint);
-
-            // Drift
-
         }
 
 
@@ -216,13 +213,27 @@ namespace CodersStrikeBackGOLD
         public String Move()
         {
             if (p_DistNextCheckpoint < (2 * p_DistMySpeed) && p_DistMissingNxtCP < 400)
-            { p_PosForMyNextMove = Next3CPRoute[1]; }
+            {
+                p_PosForMyNextMove = Next3CPRoute[1];
+                Console.Error.WriteLine("going to CP N+1");
+                // probleme ; dans les faits, ça devrait impacter tout le reste de la méthode
+            }
             else
-            { p_PosForMyNextMove = Next3CPRoute[0]; }
+            {
+                p_PosForMyNextMove = Next3CPRoute[0];
+                Console.Error.WriteLine("going to CP N");
+            }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 80) { p_ThrustForMyNextMove = 100; }
-            else { p_ThrustForMyNextMove = 0; }
+            if (Math.Abs(p_DegAngleHeadNextCP) < 80)
+            {
+                p_ThrustForMyNextMove = 100;
+                Console.Error.WriteLine("full gaz ; facing CP");
+            }
+            else {
+                p_ThrustForMyNextMove = 0;
+                Console.Error.WriteLine("no gaz ; back to CP");
+            }
 
 
             // selon la vitesse et la dérive, on corrige le cap :
@@ -231,27 +242,39 @@ namespace CodersStrikeBackGOLD
                 if (p_DistNextCheckpoint < (2 * p_DistMySpeed))
                 {
                     // je voudrais appliquer une grosse rotation du prochain CP pour déterminer mon prochain point de passage
+                    Console.Error.WriteLine("Small Drift Correction");
                 }
                 else
                 {
                     // je voudrais appliquer une petite rotation du prochain CP pour déterminer mon prochain point de passage
+                    Console.Error.WriteLine("Big Drift Correction");
                 }
             }
 
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (p_DistMySpeed > p_DistNextCheckpoint) { p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5; }
+            if (p_DistMySpeed > p_DistNextCheckpoint)
+            {
+                p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5;
+                Console.Error.WriteLine("Reduce Gaz ; close to next CP");
+            }
 
             // selon les conditions, on décide si on va utiliser le boost ou pas :
-            if (p_BoostUsed == false && Math.Abs(p_DistMissingNxtCP) < 555 && p_DistNextCheckpoint > 5555 && p_DistMySpeed > 111) { p_UseBoostCommand = true; }
+            if (p_BoostUsed == false && Math.Abs(p_DistMissingNxtCP) < 555 && p_DistNextCheckpoint > 5555 && p_DistMySpeed > 111)
+            {
+                p_UseBoostCommand = true;
+                Console.Error.WriteLine("BOOST Decision");
+            }
 
             // LET'S MOVE
             if (p_UseShieldCommand)
             {
                 return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " SHIELD";
+                Console.Error.WriteLine("SHIELD use");
             }
             else if (p_UseBoostCommand)
             {
                 return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST";
+                Console.Error.WriteLine("BOOST use");
                 p_BoostUsed = true;
                 p_UseBoostCommand = false;
             }
@@ -263,11 +286,9 @@ namespace CodersStrikeBackGOLD
 
         public void Debug()
         {
-            Console.Error.WriteLine("##############################");
             Console.Error.WriteLine("Vitesse = " + p_DistMySpeed + " , missing next point : " + p_DistMissingNxtCP);
             Console.Error.WriteLine("heading = " + p_DegAngleOrgHead + " , bearing = " + p_DegAngleHeadNextCP + " , CPAngle = " + (p_RadAngleOrgNextCP / Math.PI * 180));
             Console.Error.WriteLine("Drift = " + p_DegAngleTrackNextCP);
-            Console.Error.WriteLine("##############################");
         }
     }
 
@@ -306,12 +327,17 @@ namespace CodersStrikeBackGOLD
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
 
+                Console.Error.WriteLine("### Compute A");
+                PodMyG.Compute(PodMyH, PodHisG, PodHisH);
                 PodMyG.Debug();
 
-                PodMyG.Compute(PodMyH, PodHisG, PodHisH);
+                Console.Error.WriteLine("### Compute B");
                 PodMyH.Compute(PodMyG, PodHisG, PodHisH);
+                // PodMyH.Debug();
 
+                Console.Error.WriteLine("### Move A");
                 Console.WriteLine(PodMyG.Move());
+                Console.Error.WriteLine("### Move B");
                 Console.WriteLine(PodMyH.Move());
             }
         }
