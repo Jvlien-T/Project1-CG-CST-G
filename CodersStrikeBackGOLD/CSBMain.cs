@@ -132,11 +132,11 @@ namespace CodersStrikeBackGOLD
     {
         private Coordinates[] Next3CPRoute = new Coordinates[3];
         private Coordinates p_PrevPosMe = new Coordinates();
-        private Coordinates p_PosMe = new Coordinates();
+        private Coordinates p_PosPod = new Coordinates();
         private Coordinates p_PosMySpeed = new Coordinates();
         private Coordinates p_PosForMyNextMove = new Coordinates();
         private Coordinates p_PosEastAngleOrigin = new Coordinates(33000, 0);
-        private Coordinates p_PosMyEstimatedNext = new Coordinates();
+        private Coordinates p_NextPosEstimated = new Coordinates();
         private int p_DegAngleOrgHead = 0;
         private int p_mynext1CPID = 1;
         private int p_mynext2CPID = 2;
@@ -155,33 +155,35 @@ namespace CodersStrikeBackGOLD
         private double p_RadAngleOrgTrack = 0;
         private double p_DistMySpeed = 0;
         private double p_DistTrajCorrection = 0;
+        private const double C_DeltaSpeedShieldTrigger = 300;
+        private const double C_DeltaDistShieldTrigger = 800;
 
         public CSBPod()
         {
-            p_PosMe.X = -1;
-            p_PosMe.Y = -1;
+            p_PosPod.X = -1;
+            p_PosPod.Y = -1;
         }
 
 
         public void Update(string rawinputs, CSBTrack Track)
         {
             string[] inputs = rawinputs.Split(' ');
-            if (p_PosMe.X == -1 && p_PosMe.Y == -1)
+            if (p_PosPod.X == -1 && p_PosPod.Y == -1)
             {
                 p_PrevPosMe.X = int.Parse(inputs[0]);
                 p_PrevPosMe.Y = int.Parse(inputs[1]);
             }
             else
             {
-                p_PrevPosMe.X = p_PosMe.X;
-                p_PrevPosMe.Y = p_PosMe.Y;
+                p_PrevPosMe.X = p_PosPod.X;
+                p_PrevPosMe.Y = p_PosPod.Y;
             }
-            p_PosMe.X = int.Parse(inputs[0]);
-            p_PosMe.Y = int.Parse(inputs[1]);
+            p_PosPod.X = int.Parse(inputs[0]);
+            p_PosPod.Y = int.Parse(inputs[1]);
             p_PosMySpeed.X = int.Parse(inputs[2]);
             p_PosMySpeed.Y = int.Parse(inputs[3]);
             p_DegAngleOrgHead = int.Parse(inputs[4]);
-            p_PosEastAngleOrigin.Y = p_PosMe.Y;
+            p_PosEastAngleOrigin.Y = p_PosPod.Y;
 
             // Next 3 CP from Track
             p_mynext1CPID = int.Parse(inputs[5]);
@@ -192,13 +194,13 @@ namespace CodersStrikeBackGOLD
             Next3CPRoute[2] = Track.CPTable[p_mynext3CPID].Position;
 
             // Speed
-            p_PosMyEstimatedNext.X = p_PosMe.X + p_PosMySpeed.X;
-            p_PosMyEstimatedNext.Y = p_PosMe.Y + p_PosMySpeed.Y;
-            p_DistMySpeed = CSBCompute.DistAB(p_PosMe, p_PosMyEstimatedNext);
+            p_NextPosEstimated.X = p_PosPod.X + p_PosMySpeed.X;
+            p_NextPosEstimated.Y = p_PosPod.Y + p_PosMySpeed.Y;
+            p_DistMySpeed = CSBCompute.DistAB(p_PosPod, p_NextPosEstimated);
 
             // Angles
-            p_RadAngleOrgTrack = CSBCompute.AngleOrienteVecteur(p_PosEastAngleOrigin, p_PosMySpeed, p_PosMe);
-            p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute[0], p_PosMe);
+            p_RadAngleOrgTrack = CSBCompute.AngleOrienteVecteur(p_PosEastAngleOrigin, p_PosMySpeed, p_PosPod);
+            p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute[0], p_PosPod);
             if (FirstExecCycle) { p_DegAngleOrgHead = (int)(p_RadAngleOrgNextCP / Math.PI * 180); FirstExecCycle = false; }
             p_DegAngleHeadNextCP = ((p_RadAngleOrgNextCP / Math.PI * 180) - p_DegAngleOrgHead);
             // Drift Angles
@@ -207,20 +209,28 @@ namespace CodersStrikeBackGOLD
 
             // Distances
             p_PrevDistNextCheckPoint = p_DistNextCheckpoint;
-            p_DistNextCheckpoint = CSBCompute.DistAB(p_PosMe, Next3CPRoute[0]);
-            p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosMe, Next3CPRoute[0], p_DistNextCheckpoint);
+            p_DistNextCheckpoint = CSBCompute.DistAB(p_PosPod, Next3CPRoute[0]);
+            p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosPod, Next3CPRoute[0], p_DistNextCheckpoint);
         }
 
 
         // FMCAS //
-        public void Compute(CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
+        public void FMCAS(CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
         {
-            // TBD //
+            // etape 1 : calculer la difference entre mon vecteur vitesse et celui des autres pods //
+            // etape 2 : pour les pods pour lequels la difference de vecteur vitesse est importante, si un impact est probable, on utilise le SHIELD //
+
+            // if (CSBCompute.DistAB(p_PosMySpeed, MyFriend.p_PosMySpeed) > C_DeltaSpeedShieldTrigger && CSBCompute.DistAB(p_NextPosEstimated, MyFriend.p_NextPosEstimated) < C_DeltaDistShieldTrigger)
+            // { p_UseShieldCommand = true; }
+            if (CSBCompute.DistAB(p_PosMySpeed, MyFoeG.p_PosMySpeed) > C_DeltaSpeedShieldTrigger && CSBCompute.DistAB(p_NextPosEstimated, MyFoeG.p_NextPosEstimated) < C_DeltaDistShieldTrigger)
+            { p_UseShieldCommand = true; }
+            if (CSBCompute.DistAB(p_PosMySpeed, MyFoeH.p_PosMySpeed) > C_DeltaSpeedShieldTrigger && CSBCompute.DistAB(p_NextPosEstimated, MyFoeH.p_NextPosEstimated) < C_DeltaDistShieldTrigger)
+            { p_UseShieldCommand = true; }
         }
 
 
         // AFCS //
-        public String Move()
+        public String AFCSMOVE()
         {
             if (p_DistNextCheckpoint < (3 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
             {
@@ -235,7 +245,7 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 70)
+            if (Math.Abs(p_DegAngleHeadNextCP) < 66)
             {
                 p_ThrustForMyNextMove = 100;
                 Console.Error.WriteLine("full gaz ; facing CP");
@@ -264,24 +274,22 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon les conditions, on décide si on va utiliser le boost ou pas :
-            if (p_BoostUsed == false && Math.Abs(p_DistMissingNxtCP) < 555 && p_DistNextCheckpoint > 5555 && p_DistMySpeed > 111)
+            if (p_BoostUsed == false && Math.Abs(p_DegAngleHeadNextCP) < 20 && Math.Abs(p_DistMissingNxtCP) < 555 && p_DistNextCheckpoint > 5555 && p_DistMySpeed > 111)
             {
                 p_UseBoostCommand = true;
-                Console.Error.WriteLine("BOOST Decision");
             }
 
             // LET'S MOVE
             if (p_UseShieldCommand)
             {
+                p_UseShieldCommand = false;
                 return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " SHIELD";
-                Console.Error.WriteLine("SHIELD use");
             }
             else if (p_UseBoostCommand)
             {
-                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST";
-                Console.Error.WriteLine("BOOST use");
                 p_BoostUsed = true;
                 p_UseBoostCommand = false;
+                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST";
             }
             else
             {
@@ -332,18 +340,18 @@ namespace CodersStrikeBackGOLD
                 // Write an action using Console.WriteLine()
                 // To debug: Console.Error.WriteLine("Debug messages...");
 
-                Console.Error.WriteLine("### Compute A");
-                PodMyG.Compute(PodMyH, PodHisG, PodHisH);
-                PodMyG.Debug();
+                // Console.Error.WriteLine("### FMCAS A");
+                PodMyG.FMCAS(PodMyH, PodHisG, PodHisH);
+                // PodMyG.Debug();
 
-                Console.Error.WriteLine("### Compute B");
-                PodMyH.Compute(PodMyG, PodHisG, PodHisH);
+                // Console.Error.WriteLine("### FMCAS B");
+                PodMyH.FMCAS(PodMyG, PodHisG, PodHisH);
                 // PodMyH.Debug();
 
-                Console.Error.WriteLine("### Move A");
-                Console.WriteLine(PodMyG.Move());
-                Console.Error.WriteLine("### Move B");
-                Console.WriteLine(PodMyH.Move());
+                // Console.Error.WriteLine("### AFCSMOVE A");
+                Console.WriteLine(PodMyG.AFCSMOVE());
+                // Console.Error.WriteLine("### AFCSMOVE B");
+                Console.WriteLine(PodMyH.AFCSMOVE());
             }
         }
     }
