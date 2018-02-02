@@ -86,6 +86,15 @@ namespace CodersStrikeBackGOLD
             Coordinates Target = new Coordinates(CentreAngle.X + Vecteur.X, CentreAngle.Y + Vecteur.Y);
             return AngleOrientePos(EastOrigin, Target, CentreAngle);
         }
+
+        // fonction qui translate des coordonnées X,Y selon une distance et un angle donnés en parametres
+        static public Coordinates TranslateCoordinates(Coordinates OriginPoint, double RadTranslationAngle, double TranslationDistance)
+        {
+            Coordinates Output = new Coordinates();
+            Output.X = OriginPoint.X + (int)(TranslationDistance * Math.Cos(RadTranslationAngle));
+            Output.Y = OriginPoint.Y + (int)(TranslationDistance * Math.Sin(RadTranslationAngle));
+            return Output;
+        }
     }
 
     class CSBCheckPoint
@@ -145,6 +154,7 @@ namespace CodersStrikeBackGOLD
         private double p_DegAngleHeadNextCP = 0;
         private double p_RadAngleOrgTrack = 0;
         private double p_DistMySpeed = 0;
+        private double p_DistTrajCorrection = 0;
 
         public CSBPod()
         {
@@ -193,7 +203,7 @@ namespace CodersStrikeBackGOLD
             p_DegAngleHeadNextCP = ((p_RadAngleOrgNextCP / Math.PI * 180) - p_DegAngleOrgHead);
             // Drift Angles
             p_DegAngleTrackNextCP = ((p_RadAngleOrgNextCP - p_RadAngleOrgTrack) / Math.PI * 180 + 360) % 360;
-                if (p_DegAngleTrackNextCP > 180) { p_DegAngleTrackNextCP -= 360; }
+            if (p_DegAngleTrackNextCP > 180) { p_DegAngleTrackNextCP -= 360; }
 
             // Distances
             p_PrevDistNextCheckPoint = p_DistNextCheckpoint;
@@ -202,17 +212,17 @@ namespace CodersStrikeBackGOLD
         }
 
 
-        // Compute, va mettre à jour les 3 prochains points de route en fonction des perturbations extérieures
+        // FMCAS //
         public void Compute(CSBPod MyFriend, CSBPod MyFoeG, CSBPod MyFoeH)
         {
-            // TBD
+            // TBD //
         }
 
 
-        // Move, va se baser sur la table des 3 prochains points de route pour déplacer le POD sans se soucier des perturbations.
+        // AFCS //
         public String Move()
         {
-            if (p_DistNextCheckpoint < (2 * p_DistMySpeed) && p_DistMissingNxtCP < 400)
+            if (p_DistNextCheckpoint < (3 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
             {
                 p_PosForMyNextMove = Next3CPRoute[1];
                 Console.Error.WriteLine("going to CP N+1");
@@ -225,34 +235,29 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 80)
+            if (Math.Abs(p_DegAngleHeadNextCP) < 70)
             {
                 p_ThrustForMyNextMove = 100;
                 Console.Error.WriteLine("full gaz ; facing CP");
             }
-            else {
+            else
+            {
                 p_ThrustForMyNextMove = 0;
                 Console.Error.WriteLine("no gaz ; back to CP");
             }
 
 
             // selon la vitesse et la dérive, on corrige le cap :
-            if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 5000)
+            if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 5555)
             {
-                if (p_DistNextCheckpoint < (2 * p_DistMySpeed))
-                {
-                    // je voudrais appliquer une grosse rotation du prochain CP pour déterminer mon prochain point de passage
-                    Console.Error.WriteLine("Small Drift Correction");
-                }
-                else
-                {
-                    // je voudrais appliquer une petite rotation du prochain CP pour déterminer mon prochain point de passage
-                    Console.Error.WriteLine("Big Drift Correction");
-                }
+                if (p_DistNextCheckpoint < (2 * p_DistMySpeed)) { Console.Error.WriteLine("Big Drift Correction"); p_DistTrajCorrection = 1000; }
+                else { Console.Error.WriteLine("Small Drift Correction"); p_DistTrajCorrection = 500; }
+                if (p_DegAngleTrackNextCP > 0) { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP + Math.PI / 2), p_DistTrajCorrection); }
+                else { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP - Math.PI / 2), p_DistTrajCorrection); }
             }
 
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (p_DistMySpeed > p_DistNextCheckpoint)
+            if (3 * p_DistMySpeed > p_DistNextCheckpoint)
             {
                 p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5;
                 Console.Error.WriteLine("Reduce Gaz ; close to next CP");
