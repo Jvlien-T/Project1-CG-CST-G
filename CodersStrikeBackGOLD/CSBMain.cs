@@ -90,10 +90,10 @@ namespace CodersStrikeBackGOLD
         // fonction qui translate des coordonnées X,Y selon une distance et un angle donnés en parametres
         static public Coordinates TranslateCoordinates(Coordinates TranslationOrigin, double TranslationRadAngle, double TranslationDistance)
         {
-            Coordinates Output = new Coordinates();
-            Output.X = TranslationOrigin.X + (int)(TranslationDistance * Math.Cos(TranslationRadAngle));
-            Output.Y = TranslationOrigin.Y + (int)(TranslationDistance * Math.Sin(TranslationRadAngle));
-            return Output;
+            Coordinates TranslationResult = new Coordinates();
+            TranslationResult.X = TranslationOrigin.X + (int)(TranslationDistance * Math.Cos(TranslationRadAngle));
+            TranslationResult.Y = TranslationOrigin.Y + (int)(TranslationDistance * Math.Sin(TranslationRadAngle));
+            return TranslationResult;
         }
     }
 
@@ -232,7 +232,7 @@ namespace CodersStrikeBackGOLD
         // AFCS //
         public String AFCSMOVE()
         {
-            if (p_DistNextCheckpoint < (3 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
+            if ((p_DistNextCheckpoint - 600) < (3 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
             {
                 p_PosForMyNextMove = Next3CPRoute[1];
                 Console.Error.WriteLine("going to CP N+1");
@@ -245,7 +245,7 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 66)
+            if (Math.Abs(p_DegAngleHeadNextCP) < 75)
             {
                 p_ThrustForMyNextMove = 100;
                 Console.Error.WriteLine("full gaz ; facing CP");
@@ -258,16 +258,16 @@ namespace CodersStrikeBackGOLD
 
 
             // selon la vitesse et la dérive, on corrige le cap :
-            if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 5555)
+            if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 6666)
             {
-                if (p_DistNextCheckpoint < (2 * p_DistMySpeed)) { Console.Error.WriteLine("Big Drift Correction"); p_DistTrajCorrection = 1000; }
+                if ((p_DistNextCheckpoint - 600) < (3 * p_DistMySpeed)) { Console.Error.WriteLine("Big Drift Correction"); p_DistTrajCorrection = 1111; }
                 else { Console.Error.WriteLine("Small Drift Correction"); p_DistTrajCorrection = 500; }
                 if (p_DegAngleTrackNextCP > 0) { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP + Math.PI / 2), p_DistTrajCorrection); }
                 else { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP - Math.PI / 2), p_DistTrajCorrection); }
             }
 
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (3 * p_DistMySpeed > p_DistNextCheckpoint)
+            if (p_DistMySpeed > (p_DistNextCheckpoint / 3))
             {
                 p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5;
                 Console.Error.WriteLine("Reduce Gaz ; close to next CP");
