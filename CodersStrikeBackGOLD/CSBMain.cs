@@ -88,11 +88,11 @@ namespace CodersStrikeBackGOLD
         }
 
         // fonction qui translate des coordonnées X,Y selon une distance et un angle donnés en parametres
-        static public Coordinates TranslateCoordinates(Coordinates OriginPoint, double RadTranslationAngle, double TranslationDistance)
+        static public Coordinates TranslateCoordinates(Coordinates TranslationOrigin, double TranslationRadAngle, double TranslationDistance)
         {
             Coordinates Output = new Coordinates();
-            Output.X = OriginPoint.X + (int)(TranslationDistance * Math.Cos(RadTranslationAngle));
-            Output.Y = OriginPoint.Y + (int)(TranslationDistance * Math.Sin(RadTranslationAngle));
+            Output.X = TranslationOrigin.X + (int)(TranslationDistance * Math.Cos(TranslationRadAngle));
+            Output.Y = TranslationOrigin.Y + (int)(TranslationDistance * Math.Sin(TranslationRadAngle));
             return Output;
         }
     }
