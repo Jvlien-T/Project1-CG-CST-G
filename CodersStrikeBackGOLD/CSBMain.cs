@@ -245,16 +245,9 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 75)
-            {
-                p_ThrustForMyNextMove = 100;
-                Console.Error.WriteLine("full gaz ; facing CP");
-            }
-            else
-            {
-                p_ThrustForMyNextMove = 0;
-                Console.Error.WriteLine("no gaz ; back to CP");
-            }
+            if (Math.Abs(p_DegAngleHeadNextCP) < 75) { p_ThrustForMyNextMove = 100; }
+            else if (Math.Abs(p_DegAngleHeadNextCP) < 85) { p_ThrustForMyNextMove = 50; }
+            else { p_ThrustForMyNextMove = 0; }
 
 
             // selon la vitesse et la dérive, on corrige le cap :
@@ -267,7 +260,7 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon la proximité avec le prochain WP, on réduit les gaz :
-            if (p_DistMySpeed > (p_DistNextCheckpoint / 3))
+            if ((p_DistNextCheckpoint - 600) < (3 * p_DistMySpeed))
             {
                 p_ThrustForMyNextMove = p_ThrustForMyNextMove / 5;
                 Console.Error.WriteLine("Reduce Gaz ; close to next CP");
@@ -283,17 +276,17 @@ namespace CodersStrikeBackGOLD
             if (p_UseShieldCommand)
             {
                 p_UseShieldCommand = false;
-                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " SHIELD";
+                return (p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " SHIELD boom");
             }
             else if (p_UseBoostCommand)
             {
                 p_BoostUsed = true;
                 p_UseBoostCommand = false;
-                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST";
+                return (p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " BOOST gooooo");
             }
             else
             {
-                return p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " " + p_ThrustForMyNextMove;
+                return (p_PosForMyNextMove.X + " " + p_PosForMyNextMove.Y + " " + p_ThrustForMyNextMove);
             }
         }
 
