@@ -245,8 +245,8 @@ namespace CodersStrikeBackGOLD
             }
 
             // selon le relevement du prochain WP, on régule les gaz :
-            if (Math.Abs(p_DegAngleHeadNextCP) < 75) { p_ThrustForMyNextMove = 100; }
-            else if (Math.Abs(p_DegAngleHeadNextCP) < 85) { p_ThrustForMyNextMove = 50; }
+            if (Math.Abs(p_DegAngleHeadNextCP) < 70) { p_ThrustForMyNextMove = 100; }
+            else if (Math.Abs(p_DegAngleHeadNextCP) < 80) { p_ThrustForMyNextMove = 50; }
             else { p_ThrustForMyNextMove = 0; }
 
 
