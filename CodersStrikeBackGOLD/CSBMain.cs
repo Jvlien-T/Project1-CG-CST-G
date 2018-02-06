@@ -232,7 +232,7 @@ namespace CodersStrikeBackGOLD
         // AFCS //
         public String AFCSMOVE()
         {
-            if ((p_DistNextCheckpoint - 600) < (3 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
+            if ((p_DistNextCheckpoint - 600) < (4 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
             {
                 p_PosForMyNextMove = Next3CPRoute[1];
                 Console.Error.WriteLine("going to CP N+1");
@@ -253,7 +253,7 @@ namespace CodersStrikeBackGOLD
             // selon la vitesse et la dérive, on corrige le cap :
             if (p_DistMissingNxtCP > 555 && p_DistNextCheckpoint < 6666)
             {
-                if ((p_DistNextCheckpoint - 600) < (3 * p_DistMySpeed)) { Console.Error.WriteLine("Big Drift Correction"); p_DistTrajCorrection = 1111; }
+                if ((p_DistNextCheckpoint - 600) < (4 * p_DistMySpeed)) { Console.Error.WriteLine("Big Drift Correction"); p_DistTrajCorrection = 1111; }
                 else { Console.Error.WriteLine("Small Drift Correction"); p_DistTrajCorrection = 500; }
                 if (p_DegAngleTrackNextCP > 0) { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP + Math.PI / 2), p_DistTrajCorrection); }
                 else { p_PosForMyNextMove = CSBCompute.TranslateCoordinates(p_PosForMyNextMove, (p_RadAngleOrgNextCP - Math.PI / 2), p_DistTrajCorrection); }
