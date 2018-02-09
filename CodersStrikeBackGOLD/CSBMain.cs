@@ -128,6 +128,13 @@ namespace CodersStrikeBackGOLD
         }
     }
 
+    class Next3CPRoute
+    {
+        public Coordinates NextCP1 { get; set; } = new Coordinates();
+        public Coordinates NextCP2 { get; set; } = new Coordinates();
+        public Coordinates NextCP3 { get; set; } = new Coordinates();
+    }
+
     class CSBPod
     {
         private Coordinates[] Next3CPRoute = new Coordinates[3];
