@@ -9,6 +9,7 @@ namespace CodersStrikeBackGOLD
 {
     public enum SectionLengthType { Close, Average, Far };
     public enum CurveStrengthType { Open, Medium, Hairpin };
+
     public class Coordinates
     {
         public int X { get; set; }
@@ -18,10 +19,25 @@ namespace CodersStrikeBackGOLD
             X = inputX;
             Y = inputY;
         }
+        public Coordinates(Coordinates Input)
+        {
+            X = Input.X;
+            Y = Input.Y;
+        }
         public Coordinates()
         {
             X = 0;
             Y = 0;
+        }
+        public void Update(int inputX, int inputY)
+        {
+            X = inputX;
+            Y = inputY;
+        }
+        public void Update(Coordinates Input)
+        {
+            X = Input.X;
+            Y = Input.Y;
         }
     }
 
@@ -103,8 +119,7 @@ namespace CodersStrikeBackGOLD
         public Coordinates Position { get; } = new Coordinates();
         public CSBCheckPoint(int x, int y)
         {
-            Position.X = x;
-            Position.Y = y;
+            Position.Update(x, y);
         }
     }
 
@@ -128,16 +143,27 @@ namespace CodersStrikeBackGOLD
         }
     }
 
-    class Next3CPRoute
+    class ThreeCoordinates
     {
         public Coordinates NextCP1 { get; set; } = new Coordinates();
         public Coordinates NextCP2 { get; set; } = new Coordinates();
         public Coordinates NextCP3 { get; set; } = new Coordinates();
+
+        public void Update(Coordinates CP1, Coordinates CP2, Coordinates CP3)
+        {
+            NextCP1.Update(CP1);
+            NextCP2.Update(CP2);
+            NextCP3.Update(CP3);
+        }
+        public void insertFirstCP(Coordinates CP)
+        {
+            
+        }
     }
 
     class CSBPod
     {
-        private Coordinates[] Next3CPRoute = new Coordinates[3];
+        private ThreeCoordinates Next3CPRoute = new ThreeCoordinates();
         private Coordinates p_PrevPosMe = new Coordinates();
         private Coordinates p_PosPod = new Coordinates();
         private Coordinates p_PosMySpeed = new Coordinates();
@@ -145,7 +171,7 @@ namespace CodersStrikeBackGOLD
         private Coordinates p_PosEastAngleOrigin = new Coordinates(33000, 0);
         private Coordinates p_NextPosEstimated = new Coordinates();
         private int p_DegAngleOrgHead = 0;
-        private int p_mynext1CPID = 1;
+        private int p_nextTRACKCPID = 1;
         private int p_mynext2CPID = 2;
         private int p_mynext3CPID = 3;
         private int p_ThrustForMyNextMove = 0;
@@ -167,8 +193,7 @@ namespace CodersStrikeBackGOLD
 
         public CSBPod()
         {
-            p_PosPod.X = -1;
-            p_PosPod.Y = -1;
+            p_PosPod.Update(-1, -1);
         }
 
 
@@ -177,29 +202,21 @@ namespace CodersStrikeBackGOLD
             string[] inputs = rawinputs.Split(' ');
             if (p_PosPod.X == -1 && p_PosPod.Y == -1)
             {
-                p_PrevPosMe.X = int.Parse(inputs[0]);
-                p_PrevPosMe.Y = int.Parse(inputs[1]);
+                p_PrevPosMe.Update(int.Parse(inputs[0]), int.Parse(inputs[1]));
             }
             else
             {
-                p_PrevPosMe.X = p_PosPod.X;
-                p_PrevPosMe.Y = p_PosPod.Y;
+                p_PrevPosMe.Update(p_PosPod);
             }
-            p_PosPod.X = int.Parse(inputs[0]);
-            p_PosPod.Y = int.Parse(inputs[1]);
-            p_PosMySpeed.X = int.Parse(inputs[2]);
-            p_PosMySpeed.Y = int.Parse(inputs[3]);
+            p_PosPod.Update(int.Parse(inputs[0]), int.Parse(inputs[1]));
+            p_PosMySpeed.Update(int.Parse(inputs[2]), int.Parse(inputs[3]));
             p_DegAngleOrgHead = int.Parse(inputs[4]);
             p_PosEastAngleOrigin.Y = p_PosPod.Y;
 
             // Next 3 CP from Track
-            p_mynext1CPID = int.Parse(inputs[5]);
-            Next3CPRoute[0] = Track.CPTable[p_mynext1CPID].Position;
-            p_mynext2CPID = (p_mynext1CPID + 1) % Track.CPNumber;
-            Next3CPRoute[1] = Track.CPTable[p_mynext2CPID].Position;
-            p_mynext3CPID = (p_mynext1CPID + 2) % Track.CPNumber;
-            Next3CPRoute[2] = Track.CPTable[p_mynext3CPID].Position;
-
+            p_nextTRACKCPID = int.Parse(inputs[5]);
+            Next3CPRoute.Update(Track.CPTable[p_nextTRACKCPID].Position, Track.CPTable[(p_nextTRACKCPID + 1) % Track.CPNumber].Position, Track.CPTable[(p_nextTRACKCPID + 2) % Track.CPNumber].Position);
+            
             // Speed
             p_NextPosEstimated.X = p_PosPod.X + p_PosMySpeed.X;
             p_NextPosEstimated.Y = p_PosPod.Y + p_PosMySpeed.Y;
@@ -207,7 +224,7 @@ namespace CodersStrikeBackGOLD
 
             // Angles
             p_RadAngleOrgTrack = CSBCompute.AngleOrienteVecteur(p_PosEastAngleOrigin, p_PosMySpeed, p_PosPod);
-            p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute[0], p_PosPod);
+            p_RadAngleOrgNextCP = CSBCompute.AngleOrientePos(p_PosEastAngleOrigin, Next3CPRoute.NextCP1, p_PosPod);
             if (FirstExecCycle) { p_DegAngleOrgHead = (int)(p_RadAngleOrgNextCP / Math.PI * 180); FirstExecCycle = false; }
             p_DegAngleHeadNextCP = ((p_RadAngleOrgNextCP / Math.PI * 180) - p_DegAngleOrgHead);
             // Drift Angles
@@ -216,8 +233,8 @@ namespace CodersStrikeBackGOLD
 
             // Distances
             p_PrevDistNextCheckPoint = p_DistNextCheckpoint;
-            p_DistNextCheckpoint = CSBCompute.DistAB(p_PosPod, Next3CPRoute[0]);
-            p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosPod, Next3CPRoute[0], p_DistNextCheckpoint);
+            p_DistNextCheckpoint = CSBCompute.DistAB(p_PosPod, Next3CPRoute.NextCP1);
+            p_DistMissingNxtCP = CSBCompute.ClosestFromNxtCP(p_PrevPosMe, p_PosPod, Next3CPRoute.NextCP1, p_DistNextCheckpoint);
         }
 
 
@@ -241,13 +258,13 @@ namespace CodersStrikeBackGOLD
         {
             if ((p_DistNextCheckpoint - 600) < (4 * p_DistMySpeed) && p_DistMissingNxtCP < 555)
             {
-                p_PosForMyNextMove = Next3CPRoute[1];
+                p_PosForMyNextMove = Next3CPRoute.NextCP2;
                 Console.Error.WriteLine("going to CP N+1");
                 // probleme ; dans les faits, ça devrait impacter tout le reste de la méthode
             }
             else
             {
-                p_PosForMyNextMove = Next3CPRoute[0];
+                p_PosForMyNextMove = Next3CPRoute.NextCP1;
                 Console.Error.WriteLine("going to CP N");
             }
 
